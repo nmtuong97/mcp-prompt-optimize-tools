@@ -11,8 +11,8 @@ import chalk from 'chalk';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SequentialThinkingSchema, SEQUENTIAL_THINKING_TOOL } from './schema.js';
-import { ThoughtData, ToolRecommendation, StepRecommendation, Tool } from './types.js';
+import { PromptOptimizationSchema, PROMPT_OPTIMIZE_TOOL } from './schema.js';
+import { PromptOptimizationData, Tool } from './types.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -28,7 +28,7 @@ const server = new McpServer(
 	{
 		name,
 		version,
-		description: 'MCP server for Sequential Thinking Tools',
+		description: 'MCP server for structured prompt optimization',
 	},
 	{
 		adapter,
@@ -43,9 +43,9 @@ interface ServerOptions {
 	maxHistorySize?: number;
 }
 
-class ToolAwareSequentialThinkingServer {
-	private thought_history: ThoughtData[] = [];
-	private branches: Record<string, ThoughtData[]> = {};
+class PromptOptimizerServer {
+	private optimization_history: PromptOptimizationData[] = [];
+	private branches: Record<string, PromptOptimizationData[]> = {};
 	private available_tools: Map<string, Tool> = new Map();
 	private maxHistorySize: number;
 
@@ -56,9 +56,9 @@ class ToolAwareSequentialThinkingServer {
 	constructor(options: ServerOptions = {}) {
 		this.maxHistorySize = options.maxHistorySize || 1000;
 		
-		// Always include the sequential thinking tool
+		// Always include the prompt optimization tool
 		const tools = [
-			SEQUENTIAL_THINKING_TOOL,
+			PROMPT_OPTIMIZE_TOOL,
 			...(options.available_tools || []),
 		];
 
@@ -80,7 +80,7 @@ class ToolAwareSequentialThinkingServer {
 	}
 
 	public clearHistory(): void {
-		this.thought_history = [];
+		this.optimization_history = [];
 		this.branches = {};
 		console.error('History cleared');
 	}
@@ -100,63 +100,38 @@ class ToolAwareSequentialThinkingServer {
 		console.error('Tool discovery not implemented - manually add tools via addTool()');
 	}
 
-	private formatRecommendation(step: StepRecommendation): string {
-		const tools = step.recommended_tools
-			.map((tool) => {
-				const alternatives = tool.alternatives?.length 
-					? ` (alternatives: ${tool.alternatives.join(', ')})`
-					: '';
-				const inputs = tool.suggested_inputs 
-					? `\n    Suggested inputs: ${JSON.stringify(tool.suggested_inputs)}`
-					: '';
-				return `  - ${tool.tool_name} (priority: ${tool.priority})${alternatives}
-    Rationale: ${tool.rationale}${inputs}`;
-			})
-			.join('\n');
-
-		return `Step: ${step.step_description}
-Recommended Tools:
-${tools}
-Expected Outcome: ${step.expected_outcome}${
-			step.next_step_conditions
-				? `\nConditions for next step:\n  - ${step.next_step_conditions.join('\n  - ')}`
-				: ''
-		}`;
-	}
-
-	private formatThought(thoughtData: ThoughtData): string {
+	private formatOptimization(optimizationData: PromptOptimizationData): string {
 		const {
-			thought_number,
-			total_thoughts,
-			thought,
-			is_revision,
-			revises_thought,
-			branch_from_thought,
-			branch_id,
-			current_step,
-		} = thoughtData;
+			rawPrompt,
+			iteration,
+			criticism,
+			suggestedRole,
+			optimizedPrompt,
+			isRevision,
+			revisesIteration,
+			branchFromIteration,
+			branchId,
+		} = optimizationData;
 
 		let prefix = '';
 		let context = '';
 
-		if (is_revision) {
+		if (isRevision) {
 			prefix = chalk.yellow('🔄 Revision');
-			context = ` (revising thought ${revises_thought})`;
-		} else if (branch_from_thought) {
+			context = ` (revising iteration ${revisesIteration})`;
+		} else if (branchFromIteration) {
 			prefix = chalk.green('🌿 Branch');
-			context = ` (from thought ${branch_from_thought}, ID: ${branch_id})`;
+			context = ` (from iteration ${branchFromIteration}, ID: ${branchId})`;
 		} else {
-			prefix = chalk.blue('💭 Thought');
+			prefix = chalk.blue('✨ Optimization');
 			context = '';
 		}
 
-		const header = `${prefix} ${thought_number}/${total_thoughts}${context}`;
-		let content = thought;
-
-		// Add recommendation information if present
-		if (current_step) {
-			content = `${thought}\n\nRecommendation:\n${this.formatRecommendation(current_step)}`;
-		}
+		const header = `${prefix} ${iteration}${context}`;
+		const content = `Raw Prompt: ${rawPrompt}
+Criticism: ${criticism}
+Suggested Role: ${suggestedRole}
+Optimized Prompt: ${optimizedPrompt}`;
 
 		const border = '─'.repeat(
 			Math.max(header.length, content.length) + 4,
@@ -170,45 +145,31 @@ Expected Outcome: ${step.expected_outcome}${
 └${border}┘`;
 	}
 
-	public async processThought(input: v.InferInput<typeof SequentialThinkingSchema>) {
+	public async processOptimization(input: v.InferInput<typeof PromptOptimizationSchema>) {
 		try {
 			// Input is already validated by tmcp with Valibot
-			const validatedInput = input as ThoughtData;
+			const validatedInput = input as PromptOptimizationData;
 
-			if (
-				validatedInput.thought_number > validatedInput.total_thoughts
-			) {
-				validatedInput.total_thoughts = validatedInput.thought_number;
-			}
-
-			// Store the current step in thought history
-			if (validatedInput.current_step) {
-				if (!validatedInput.previous_steps) {
-					validatedInput.previous_steps = [];
-				}
-				validatedInput.previous_steps.push(validatedInput.current_step);
-			}
-
-			this.thought_history.push(validatedInput);
+			this.optimization_history.push(validatedInput);
 		
-		// Prevent memory leaks by limiting history size
-		if (this.thought_history.length > this.maxHistorySize) {
-			this.thought_history = this.thought_history.slice(-this.maxHistorySize);
-			console.error(`History trimmed to ${this.maxHistorySize} items`);
-		}
-
-			if (
-				validatedInput.branch_from_thought &&
-				validatedInput.branch_id
-			) {
-				if (!this.branches[validatedInput.branch_id]) {
-					this.branches[validatedInput.branch_id] = [];
-				}
-				this.branches[validatedInput.branch_id].push(validatedInput);
+			// Prevent memory leaks by limiting history size
+			if (this.optimization_history.length > this.maxHistorySize) {
+				this.optimization_history = this.optimization_history.slice(-this.maxHistorySize);
+				console.error(`History trimmed to ${this.maxHistorySize} items`);
 			}
 
-			const formattedThought = this.formatThought(validatedInput);
-			console.error(formattedThought);
+			if (
+				validatedInput.branchFromIteration &&
+				validatedInput.branchId
+			) {
+				if (!this.branches[validatedInput.branchId]) {
+					this.branches[validatedInput.branchId] = [];
+				}
+				this.branches[validatedInput.branchId].push(validatedInput);
+			}
+
+			const formattedOptimization = this.formatOptimization(validatedInput);
+			console.error(formattedOptimization);
 
 			return {
 				content: [
@@ -216,16 +177,15 @@ Expected Outcome: ${step.expected_outcome}${
 						type: 'text' as const,
 						text: JSON.stringify(
 							{
-								thought_number: validatedInput.thought_number,
-								total_thoughts: validatedInput.total_thoughts,
-								next_thought_needed:
-									validatedInput.next_thought_needed,
+								rawPrompt: validatedInput.rawPrompt,
+								iteration: validatedInput.iteration,
+								nextIterationNeeded:
+									validatedInput.nextIterationNeeded ?? false,
 								branches: Object.keys(this.branches),
-								thought_history_length: this.thought_history.length,
-								available_mcp_tools: validatedInput.available_mcp_tools,
-								current_step: validatedInput.current_step,
-								previous_steps: validatedInput.previous_steps,
-								remaining_steps: validatedInput.remaining_steps,
+								optimizationHistoryLength: this.optimization_history.length,
+								criticism: validatedInput.criticism,
+								suggestedRole: validatedInput.suggestedRole,
+								optimizedPrompt: validatedInput.optimizedPrompt,
 							},
 							null,
 							2,
@@ -256,34 +216,34 @@ Expected Outcome: ${step.expected_outcome}${
 		}
 	}
 
-	// Tool execution removed - the MCP client handles tool execution
-	// This server only provides tool recommendations
+	// Tool execution is handled by the MCP client.
+	// This server focuses on prompt optimization state and formatting.
 }
 
 // Read configuration from environment variables or command line args
 const maxHistorySize = parseInt(process.env.MAX_HISTORY_SIZE || '1000');
 
-const thinkingServer = new ToolAwareSequentialThinkingServer({
+const promptOptimizerServer = new PromptOptimizerServer({
 	available_tools: [], // TODO: Add tool discovery mechanism
 	maxHistorySize,
 });
 
-// Register the sequential thinking tool
+// Register the prompt optimization tool
 server.tool(
 	{
-		name: 'sequentialthinking_tools',
-		description: SEQUENTIAL_THINKING_TOOL.description,
-		schema: SequentialThinkingSchema,
+		name: PROMPT_OPTIMIZE_TOOL.name,
+		description: PROMPT_OPTIMIZE_TOOL.description,
+		schema: PromptOptimizationSchema,
 	},
 	async (input) => {
-		return thinkingServer.processThought(input);
+		return promptOptimizerServer.processOptimization(input);
 	},
 );
 
 async function main() {
 	const transport = new StdioTransport(server);
 	transport.listen();
-	console.error('Sequential Thinking MCP Server running on stdio');
+	console.error('Prompt Optimization MCP Server running on stdio');
 }
 
 main().catch((error) => {
