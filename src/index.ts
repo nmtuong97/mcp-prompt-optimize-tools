@@ -104,9 +104,11 @@ class PromptOptimizerServer {
 		const {
 			rawPrompt,
 			iteration,
+			appliedFramework,
 			criticism,
 			suggestedRole,
 			optimizedPrompt,
+			suggestedMcpTools,
 			isRevision,
 			revisesIteration,
 			branchFromIteration,
@@ -117,32 +119,32 @@ class PromptOptimizerServer {
 		let context = '';
 
 		if (isRevision) {
-			prefix = chalk.yellow('🔄 Revision');
-			context = ` (revising iteration ${revisesIteration})`;
+			prefix = chalk.yellow('🔄 Sửa đổi');
+			context = ` (từ vòng lặp ${revisesIteration})`;
 		} else if (branchFromIteration) {
-			prefix = chalk.green('🌿 Branch');
-			context = ` (from iteration ${branchFromIteration}, ID: ${branchId})`;
+			prefix = chalk.green('🌿 Nhánh mới');
+			context = ` (từ vòng lặp ${branchFromIteration}, ID: ${branchId})`;
 		} else {
-			prefix = chalk.blue('✨ Optimization');
+			prefix = chalk.blue('✨ Tối ưu');
 			context = '';
 		}
 
-		const header = `${prefix} ${iteration}${context}`;
-		const content = `Raw Prompt: ${rawPrompt}
-Criticism: ${criticism}
-Suggested Role: ${suggestedRole}
-Optimized Prompt: ${optimizedPrompt}`;
+		let outputText = `[Báo cáo Tối ưu hóa Prompt - Lần ${iteration}]${context}\n`;
+		outputText += `- 📌 Framework áp dụng: **${appliedFramework}**\n`;
+		outputText += `- 🔍 Phê bình / Phân tích (Criticism): ${criticism}\n`;
+		if (suggestedRole) {
+			outputText += `- 🎭 Vai trò đề xuất: ${suggestedRole}\n`;
+		}
+		outputText += `- 📝 Prompt Dự thảo:\n---\n${optimizedPrompt}\n---\n`;
+		if (suggestedMcpTools) {
+			outputText += `- 🛠️ Công cụ MCP khuyên dùng kèm: ${suggestedMcpTools}\n`;
+		}
 
-		const border = '─'.repeat(
-			Math.max(header.length, content.length) + 4,
-		);
+		const header = `${prefix} Lần ${iteration}${context}`;
+		const border = '─'.repeat(Math.max(header.length, 50) + 4);
+		console.error(`\n┌${border}┐\n│ ${header.padEnd(border.length - 2)} │\n├${border}┤\n│ Áp dụng: ${appliedFramework.padEnd(border.length - 11)}│\n└${border}┘`);
 
-		return `
-┌${border}┐
-│ ${header} │
-├${border}┤
-│ ${content.padEnd(border.length - 2)} │
-└${border}┘`;
+		return outputText;
 	}
 
 	public async processOptimization(input: v.InferInput<typeof PromptOptimizationSchema>) {
@@ -175,21 +177,7 @@ Optimized Prompt: ${optimizedPrompt}`;
 				content: [
 					{
 						type: 'text' as const,
-						text: JSON.stringify(
-							{
-								rawPrompt: validatedInput.rawPrompt,
-								iteration: validatedInput.iteration,
-								nextIterationNeeded:
-									validatedInput.nextIterationNeeded ?? false,
-								branches: Object.keys(this.branches),
-								optimizationHistoryLength: this.optimization_history.length,
-								criticism: validatedInput.criticism,
-								suggestedRole: validatedInput.suggestedRole,
-								optimizedPrompt: validatedInput.optimizedPrompt,
-							},
-							null,
-							2,
-						),
+						text: formattedOptimization,
 					},
 				],
 			};

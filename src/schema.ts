@@ -2,44 +2,24 @@ import * as v from 'valibot';
 import { Tool } from './types.js';
 
 const TOOL_DESCRIPTION = `A structured tool for iterative prompt optimization and strategic engineering.
-This tool helps refine an initial prompt through critique, role assignment, and targeted rewrites.
-Each iteration can improve, revise, or branch from previous optimization work as understanding deepens.
 
-IMPORTANT: This server facilitates structured prompt optimization. The LLM should critique weak or missing details, assign the best role for the task, and produce a stronger optimized prompt for the next iteration.
-
-When to use this tool:
-- Transforming a rough user request into a production-ready prompt
-- Iteratively refining prompts with critique and revision
-- Assigning a clearer expert persona or execution role
-- Improving prompts that are vague, underspecified, or likely to hallucinate
-- Prompt engineering workflows that benefit from structured iteration
-
-Key features:
-- Tracks iterative prompt improvements
-- Captures critique for each optimization pass
-- Suggests an expert role to guide execution
-- Supports revisions and optional branching between prompt variants
-- Preserves optimization history for multi-step refinement
+QUY ĐỊNH BẮT BUỘC KHI TỐI ƯU PROMPT:
+Bạn PHẢI chọn và áp dụng 1 trong 5 kỹ thuật (Framework) sau đây vào bản tối ưu (optimizedPrompt):
+1. CoT (Chain-of-Thought): Yêu cầu AI suy luận từng bước trước khi trả lời.
+2. RTF (Role-Task-Format): Xác định rõ Vai trò, Nhiệm vụ và Định dạng đầu ra.
+3. Few-Shot: Cung cấp trước một số ví dụ (examples) về input/output chuẩn.
+4. CREATE (Context, Request, Explanation, Action, Tone, Extra): Đầy đủ ngữ cảnh, yêu cầu, hành động và giọng điệu.
+5. CRISP (Context, Request, Intent, Specifics, Persona): Ngắn gọn, tập trung vào mục đích cụ thể.
 
 Parameters explained:
-- rawPrompt: The original prompt or request that needs improvement
-- iteration: The current optimization pass
-- criticism: The key weaknesses, gaps, or risks in the current prompt
-- suggestedRole: The expert persona best suited for handling the task
-- optimizedPrompt: The rewritten, higher-quality prompt produced for this iteration
-- nextIterationNeeded: True when another optimization pass is still needed
-- isRevision: Whether this iteration revises a previous optimization
-- revisesIteration: Which earlier iteration is being reconsidered
-- branchFromIteration: If branching, which iteration this branch extends from
-- branchId: Identifier for the current branch (if any)
-
-You should:
-1. Begin with the original prompt and identify missing details
-2. Record clear criticism for each iteration
-3. Choose a role that improves the quality of the final result
-4. Produce a stronger optimized prompt on every pass
-5. Use revisions or branches when exploring alternate prompt strategies
-6. Only mark optimization as complete when the prompt is ready for execution`;
+- rawPrompt: The original prompt
+- iteration: Current optimization pass
+- appliedFramework: MUST be one of: 'CoT', 'RTF', 'Few-Shot', 'CREATE', 'CRISP'
+- criticism: Weaknesses in the current prompt
+- suggestedRole: The expert persona
+- optimizedPrompt: The rewritten, higher-quality prompt based on the chosen framework
+- suggestedMcpTools: Recommended MCP tools to use alongside this prompt (e.g., "puppeteer", "github")
+`;
 
 export const PromptOptimizationSchema = v.object({
 	rawPrompt: v.pipe(
@@ -50,6 +30,10 @@ export const PromptOptimizationSchema = v.object({
 		v.number(),
 		v.minValue(1),
 		v.description('Current optimization iteration number')
+	),
+	appliedFramework: v.pipe(
+		v.picklist(['CoT', 'RTF', 'Few-Shot', 'CREATE', 'CRISP']),
+		v.description('BẮT BUỘC: Chọn 1 trong 5 kỹ thuật tối ưu này')
 	),
 	criticism: v.pipe(
 		v.string(),
@@ -63,6 +47,10 @@ export const PromptOptimizationSchema = v.object({
 		v.string(),
 		v.description('Improved prompt generated for this iteration')
 	),
+	suggestedMcpTools: v.optional(v.pipe(
+		v.string(),
+		v.description('Gợi ý công cụ MCP nên dùng kèm (tuỳ chọn)')
+	)),
 	nextIterationNeeded: v.optional(v.pipe(
 		v.boolean(),
 		v.description('Whether another optimization pass is needed')
@@ -90,5 +78,5 @@ export const PromptOptimizationSchema = v.object({
 export const PROMPT_OPTIMIZE_TOOL: Tool = {
 	name: 'optimize_prompt',
 	description: TOOL_DESCRIPTION,
-	inputSchema: {} // This will be handled by tmcp with the schema above
+	inputSchema: {}
 };
