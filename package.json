@@ -1,12 +1,12 @@
 {
-	"name": "mcp-sequentialthinking-tools",
+	"name": "@nmtuong97/mcp-prompt-optimize-tools",
 	"version": "0.0.4",
-	"description": "MCP server for Sequential Thinking Tools",
+	"description": "MCP server for structured, iterative prompt optimization and strategic engineering",
 	"type": "module",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"bin": {
-		"mcp-sequentialthinking-tools": "./dist/index.js"
+		"mcp-prompt-optimize-tools": "./dist/index.js"
 	},
 	"files": [
 		"dist",
@@ -24,33 +24,30 @@
 	"keywords": [
 		"mcp",
 		"model-context-protocol",
-		"sequential-thinking",
-		"problem-solving",
-		"tool-recommendation",
-		"decision-making",
-		"thought-process",
-		"step-by-step",
+		"prompt-optimization",
+		"prompt-engineering",
+		"prompt-architect",
+		"ai-prompts",
 		"llm",
 		"ai",
-		"branching-thoughts",
-		"thought-revision",
-		"tool-analysis",
-		"problem-breakdown",
-		"solution-planning",
-		"adaptive-thinking",
-		"reflective-analysis",
-		"tool-confidence"
+		"chain-of-thought",
+		"iterative-refinement",
+		"prompt-critique",
+		"mega-prompt",
+		"role-prompting",
+		"context-enrichment",
+		"tool-orchestration"
 	],
-	"author": "Scott Spence",
+	"author": "nmtuong97",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/spences10/mcp-sequentialthinking-tools.git"
+		"url": "https://github.com/nmtuong97/mcp-prompt-optimize-tools.git"
 	},
 	"bugs": {
-		"url": "https://github.com/spences10/mcp-sequentialthinking-tools/issues"
+		"url": "https://github.com/nmtuong97/mcp-prompt-optimize-tools/issues"
 	},
-	"homepage": "https://github.com/spences10/mcp-sequentialthinking-tools#readme",
+	"homepage": "https://github.com/nmtuong97/mcp-prompt-optimize-tools#readme",
 	"dependencies": {
 		"@tmcp/adapter-valibot": "^0.1.5",
 		"@tmcp/transport-stdio": "^0.4.1",

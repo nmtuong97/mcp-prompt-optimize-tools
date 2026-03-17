@@ -72,6 +72,17 @@ The primary tool `optimize_prompt` accepts the following structured input:
 
 This project is a fork and evolution of the sequential thinking concept. Contributions are welcome! Feel free to open issues or submit PRs to improve the optimization logic.
 
+## 🙏 Credits & Acknowledgments
+
+This project is a fork of [spences10/mcp-sequentialthinking-tools](https://github.com/spences10/mcp-sequentialthinking-tools) by **Scott Spence**, which itself was adapted from the Anthropic [Model Context Protocol servers](https://github.com/modelcontextprotocol/servers) reference implementation.
+
+The foundational sequential thinking architecture and MCP tool coordination patterns are Scott Spence's original work. This repository extends that foundation specifically for prompt engineering and optimization use cases.
+
+- **Original project:** [mcp-sequentialthinking-tools](https://github.com/spences10/mcp-sequentialthinking-tools) — Scott Spence
+- **MCP specification & reference servers:** [Anthropic / Model Context Protocol](https://github.com/modelcontextprotocol)
+
 ## 📄 License
 
-MIT © nmtuong97
+MIT © nmtuong97 (Modifications) | MIT © Scott Spence (Original Work)
+
+See [LICENSE](./LICENSE) for full details.
