@@ -26,10 +26,7 @@ export interface ThoughtData {
 	branch_id?: string;
 	needs_more_thoughts?: boolean;
 	next_thought_needed: boolean;
-	criticism?: string;       // Analysis of flaws or weaknesses in the current prompt version
-	suggested_role?: string;  // Expert persona assigned to handle the task
-	refined_prompt?: string;  // The engineered prompt draft after optimization steps
-
+	
 	// Recommendation-related fields
 	current_step?: StepRecommendation;  // Current step being considered
 	previous_steps?: StepRecommendation[];  // Steps already recommended
