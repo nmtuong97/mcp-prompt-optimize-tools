@@ -1,264 +1,77 @@
-# mcp-sequentialthinking-tools
+# mcp-prompt-optimize-tools 🚀
 
-An adaptation of the
-[MCP Sequential Thinking Server](https://github.com/modelcontextprotocol/servers/blob/main/src/sequentialthinking/index.ts)
-designed to guide tool usage in problem-solving. This server helps
-break down complex problems into manageable steps and provides
-recommendations for which MCP tools would be most effective at each
-stage.
+A Model Context Protocol (MCP) server for structured, iterative prompt optimization and strategic engineering.
 
-<a href="https://glama.ai/mcp/servers/zl990kfusy">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/zl990kfusy/badge" />
-</a>
+Inspired by the [spences10/mcp-sequentialthinking-tools](https://github.com/spences10/mcp-sequentialthinking-tools), this tool transforms prompt engineering from a "guess-and-check" process into a rigorous, systematic pipeline.
 
-A Model Context Protocol (MCP) server that combines sequential
-thinking with intelligent tool suggestions. For each step in the
-problem-solving process, it provides confidence-scored recommendations
-for which tools to use, along with rationale for why each tool would
-be appropriate.
+## 🌟 Overview
 
-## Features
+**mcp-prompt-optimize-tools** acts as a "Prompt Architect" for your AI Agents. Instead of executing a raw, ambiguous user request immediately, this server forces the LLM to pause, analyze, critique, and reconstruct the prompt into a high-performance "Mega-Prompt" before final execution.
 
-- 🤔 Dynamic and reflective problem-solving through sequential
-  thoughts
-- 🔄 Flexible thinking process that adapts and evolves
-- 🌳 Support for branching and revision of thoughts
-- 🛠️ LLM-driven intelligent tool recommendations for each step
-- 📊 Confidence scoring for tool suggestions
-- 🔍 Detailed rationale for tool recommendations
-- 📝 Step tracking with expected outcomes
-- 🔄 Progress monitoring with previous and remaining steps
-- 🎯 Alternative tool suggestions for each step
-- 🧠 Memory management with configurable history limits
-- 🗑️ Manual history cleanup capabilities
+## ✨ Key Features
 
-## How It Works
+- **Iterative Refinement**: Breaks down prompt construction into logical steps (Analysis → Strategy → Construction).
+- **Critical Reflection**: Forces the AI to identify weaknesses, ambiguities, and missing context in the original user input.
+- **Persona & Context Enrichment**: Automatically assigns professional roles and injects technical constraints.
+- **Tool Orchestration**: Suggests which other MCP tools (e.g., Search, File System, Git) should be integrated into the final workflow.
+- **State Management**: Supports revisions and branching of thought, allowing the AI to backtrack and fix optimization errors.
 
-This server facilitates sequential thinking with MCP tool coordination. The LLM analyzes available tools and their descriptions to make intelligent recommendations, which are then tracked and organized by this server.
+## 🛠 How It Works
 
-The workflow:
-1. LLM provides available MCP tools to the sequential thinking server
-2. LLM analyzes each thought step and recommends appropriate tools
-3. Server tracks recommendations, maintains context, and manages memory
-4. LLM executes recommended tools and continues the thinking process
+This tool provides a structured `thought` schema that the LLM must follow:
 
-Each recommendation includes:
-- A confidence score (0-1) indicating how well the tool matches the need
-- A clear rationale explaining why the tool would be helpful
-- A priority level to suggest tool execution order
-- Suggested input parameters for the tool
-- Alternative tools that could also be used
+1.  **Analyze**: Evaluate the user's intent and identify what's missing.
+2.  **Critique**: Peer-review the current prompt version for potential hallucinations or vagueness.
+3.  **Synthesize**: Apply frameworks like Chain-of-Thought (CoT) or Role-Task-Format (RTF).
+4.  **Orchestrate**: Recommend specific MCP tools to complement the task.
+5.  **Output**: Deliver a final, production-ready prompt.
 
-The server works with any MCP tools available in your environment and automatically manages memory to prevent unbounded growth.
+---
 
-## Example Usage
+## 🚀 Quick Start
 
-Here's an example of how the server guides tool usage:
+### Installation
 
-```json
-{
-	"thought": "Initial research step to understand what universal reactivity means in Svelte 5",
-	"current_step": {
-		"step_description": "Gather initial information about Svelte 5's universal reactivity",
-		"expected_outcome": "Clear understanding of universal reactivity concept",
-		"recommended_tools": [
-			{
-				"tool_name": "search_docs",
-				"confidence": 0.9,
-				"rationale": "Search Svelte documentation for official information",
-				"priority": 1
-			},
-			{
-				"tool_name": "tavily_search",
-				"confidence": 0.8,
-				"rationale": "Get additional context from reliable sources",
-				"priority": 2
-			}
-		],
-		"next_step_conditions": [
-			"Verify information accuracy",
-			"Look for implementation details"
-		]
-	},
-	"thought_number": 1,
-	"total_thoughts": 5,
-	"next_thought_needed": true
-}
+```bash
+npm install -g @nmtuong97/mcp-prompt-optimize-tools
 ```
 
-The server tracks your progress and supports:
+### Configuration
 
-- Creating branches to explore different approaches
-- Revising previous thoughts with new information
-- Maintaining context across multiple steps
-- Suggesting next steps based on current findings
-
-## Configuration
-
-This server requires configuration through your MCP client. Here are
-examples for different environments:
-
-### Cline Configuration
-
-Add this to your Cline MCP settings:
-
-```json
-{
-	"mcpServers": {
-		"mcp-sequentialthinking-tools": {
-			"command": "npx",
-			"args": ["-y", "mcp-sequentialthinking-tools"],
-			"env": {
-				"MAX_HISTORY_SIZE": "1000"
-			}
-		}
-	}
-}
-```
-
-### Claude Desktop with WSL Configuration
-
-For WSL environments, add this to your Claude Desktop configuration:
-
-```json
-{
-	"mcpServers": {
-		"mcp-sequentialthinking-tools": {
-			"command": "wsl.exe",
-			"args": [
-				"bash",
-				"-c",
-				"MAX_HISTORY_SIZE=1000 source ~/.nvm/nvm.sh && /home/username/.nvm/versions/node/v20.12.1/bin/npx mcp-sequentialthinking-tools"
-			]
-		}
-	}
-}
-```
-
-## API
-
-The server implements a single MCP tool with configurable parameters:
-
-### sequentialthinking_tools
-
-A tool for dynamic and reflective problem-solving through thoughts,
-with intelligent tool recommendations.
-
-Parameters:
-
-- `available_mcp_tools` (array, required): Array of MCP tool names available for use (e.g., ["mcp-omnisearch", "mcp-turso-cloud"])
-- `thought` (string, required): Your current thinking step
-- `next_thought_needed` (boolean, required): Whether another thought
-  step is needed
-- `thought_number` (integer, required): Current thought number
-- `total_thoughts` (integer, required): Estimated total thoughts
-  needed
-- `is_revision` (boolean, optional): Whether this revises previous
-  thinking
-- `revises_thought` (integer, optional): Which thought is being
-  reconsidered
-- `branch_from_thought` (integer, optional): Branching point thought
-  number
-- `branch_id` (string, optional): Branch identifier
-- `needs_more_thoughts` (boolean, optional): If more thoughts are
-  needed
-- `current_step` (object, optional): Current step recommendation with:
-  - `step_description`: What needs to be done
-  - `recommended_tools`: Array of tool recommendations with confidence
-    scores
-  - `expected_outcome`: What to expect from this step
-  - `next_step_conditions`: Conditions for next step
-- `previous_steps` (array, optional): Steps already recommended
-- `remaining_steps` (array, optional): High-level descriptions of
-  upcoming steps
-
-## Memory Management
-
-The server includes built-in memory management to prevent unbounded growth:
-
-- **History Limit**: Configurable maximum number of thoughts to retain (default: 1000)
-- **Automatic Trimming**: History automatically trims when limit is exceeded
-- **Manual Cleanup**: Server provides methods to clear history when needed
-
-### Configuring History Size
-
-You can configure the history size by setting the `MAX_HISTORY_SIZE` environment variable:
+Add this to your `claude_desktop_config.json` or Cursor `mcp.json`:
 
 ```json
 {
   "mcpServers": {
-    "mcp-sequentialthinking-tools": {
+    "prompt-optimizer": {
       "command": "npx",
-      "args": ["-y", "mcp-sequentialthinking-tools"],
-      "env": {
-        "MAX_HISTORY_SIZE": "500"
-      }
+      "args": [
+        "-y",
+        "mcp-prompt-optimize-tools"
+      ]
     }
   }
 }
 ```
 
-Or for local development:
-```bash
-MAX_HISTORY_SIZE=2000 npx mcp-sequentialthinking-tools
-```
+## 📝 Tool Parameters
 
-## Development
+The primary tool `optimize_prompt` accepts the following structured input:
 
-### Setup
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `rawPrompt` | string | The original, unrefined user input. |
+| `iteration` | number | The current step in the optimization sequence. |
+| `criticism` | string | Self-identified flaws in the current version. |
+| `suggestedRole` | string | The expert persona assigned to handle the task. |
+| `optimizedPrompt` | string | The final, engineered prompt ready for execution. |
 
-1. Clone the repository
-2. Install dependencies:
+---
 
-```bash
-pnpm install
-```
+## 🤝 Contributing
 
-3. Build the project:
+This project is a fork and evolution of the sequential thinking concept. Contributions are welcome! Feel free to open issues or submit PRs to improve the optimization logic.
 
-```bash
-pnpm build
-```
+## 📄 License
 
-4. Run in development mode:
-
-```bash
-pnpm dev
-```
-
-### Publishing
-
-The project uses changesets for version management. To publish:
-
-1. Create a changeset:
-
-```bash
-pnpm changeset
-```
-
-2. Version the package:
-
-```bash
-pnpm changeset version
-```
-
-3. Publish to npm:
-
-```bash
-pnpm release
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Built on the
-  [Model Context Protocol](https://github.com/modelcontextprotocol)
-- Adapted from the
-  [MCP Sequential Thinking Server](https://github.com/modelcontextprotocol/servers/blob/main/src/sequentialthinking/index.ts)
+MIT © nmtuong97
